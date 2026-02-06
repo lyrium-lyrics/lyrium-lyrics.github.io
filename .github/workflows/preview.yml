@@ -1,4 +1,4 @@
-name: Cloudflare Pages Preview
+name: Preview Builds
 
 on:
   pull_request:
@@ -14,14 +14,17 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.9'
-
+          channel: 'stable'
+          cache: true
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+
       - name: Build Flutter web
         run: flutter build web --wasm --pwa-strategy=offline-first
-        
+
       - name: Deploy (Preview)
         run: |
           npx wrangler pages deploy build/web \
