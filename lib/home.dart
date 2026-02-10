@@ -20,17 +20,17 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Consumer<AppController>(
-      builder: (BuildContext context, AppController ctrl, Widget? child) {
+      builder: (BuildContext context, AppController app, Widget? child) {
         return Builder(
           builder: (context) {
-            if (ctrl.showTrack) {
+            if (app.showTrack) {
               return Scaffold(
                 drawer: AppDrawer(),
-                appBar: buildLyricsAppBar(ctrl),
-                body: buildcontent(ctrl),
+                appBar: buildLyricsAppBar(app),
+                body: buildcontent(app),
               );
             } else {
-              return QuickSearch(initailQuery: ctrl.info);
+              return QuickSearch(initailQuery: app.track);
             }
           },
         );
@@ -38,16 +38,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  AppBar buildLyricsAppBar(AppController ctrl) {
+  AppBar buildLyricsAppBar(AppController app) {
     return AppBar(
       actions: [
         IconButton(
-          onPressed: () => ctrl.setShowTrackMode(false),
+          onPressed: () => app.setShowTrackMode(false),
           icon: RotatedBox(quarterTurns: 1, child: Icon(Icons.chevron_right)),
         ),
       ],
       leading: FutureBuilder(
-        future: ctrl.image,
+        future: app.image,
         builder: (c, s) => Padding(
           padding: EdgeInsetsGeometry.all(8.0),
           child: SizedBox(
@@ -61,13 +61,11 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            ctrl.info?.trackName ?? ctrl.lyrics?.track.trackName ?? "No Track",
+            app.track?.trackName ?? "No Track",
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            ctrl.info?.artistName ??
-                ctrl.lyrics?.track.artistName ??
-                "No Artist",
+            app.track?.artistName ?? "No Artist",
             style: const TextStyle(fontSize: 12),
           ),
         ],
@@ -75,30 +73,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildcontent(AppController ctrl) {
+  Widget buildcontent(AppController app) {
     return Builder(
       builder: (context) {
-        if (ctrl.lyrics == null) {
+        if (app.lyrics == null) {
           return Center(
             child: Builder(
               builder: (context) {
-                if (ctrl.hasNotificationAccess) {
-                  if (ctrl.info != null) {
-                    return _buildFetcher(context, ctrl);
+                if (AppController.hasNotificationAccess) {
+                  if (app.track != null) {
+                    return _buildFetcher(context, app);
                   } else {
                     return _buildNoMusic();
                   }
                 } else {
-                  return _buildAccessRequired(context, ctrl);
+                  return _buildAccessRequired(context, app);
                 }
               },
             ),
           );
         }
 
-        final track = ctrl.lyrics;
-        final isPlaying = ctrl.isPlaying;
-        final atPosition = ctrl.progress;
+        final track = app.lyrics;
+        final isPlaying = app.selectedService.isPlaying;
+        final atPosition = app.selectedService.progress;
 
         final textColor =
             Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
@@ -115,8 +113,6 @@ class _HomePageState extends State<HomePage> {
           color: textColor,
         );
 
-        var textScaler = TextScaler.linear(2);
-
         return SizedBox(
           // width: 500,
           // height: 500,
@@ -125,15 +121,17 @@ class _HomePageState extends State<HomePage> {
               lyrics: track ?? LyricsTrack.empty(),
               isPlaying: isPlaying,
               atPosition: atPosition,
-              getPrimaryPosition: ctrl.position,
-              onTogglePause: (b) => ctrl.togglePause(pause: b),
-              onSeek: ctrl.seekTo,
+              onTogglePause: (b) => app.selectedService.togglePause(),
+              onSeek: app.seekTo,
             ),
             textStyle: textStyle,
             highlightTextStyle: highlighttextStyle,
+            completedTextStyle: highlighttextStyle.copyWith(
+              color: highlighttextStyle.color?.withAlpha(200),
+            ),
             onSave: () => opensubmitform(
               context,
-              DraftTrack.from(ctrl.lyrics!, ctrl.lyrics!.syncedLyrics!),
+              DraftTrack.from(app.lyrics!, app.lyrics!.syncedLyrics!),
             ),
           ),
         );
@@ -141,36 +139,41 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  PreferredSize buildnotificationpr(AppController ctrl) {
+  PreferredSize buildnotificationpr(AppController app) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(5),
       child: LinearProgressIndicator(
-        value: ctrl.progressValue,
-        backgroundColor: ctrl.lyrics != null ? null : Colors.transparent,
+        value: app.progressValue,
+        backgroundColor: app.lyrics != null ? null : Colors.transparent,
       ),
     );
   }
 
   bool busyFeching = false;
 
-  Widget _buildFetcher(BuildContext context, AppController ctrl) {
+  Widget _buildFetcher(BuildContext context, AppController app) {
     return GestureDetector(
       onTap: () async {
-        if (busyFeching) return;
-        try {
-          busyFeching = true;
-          setState(() {});
-          await ctrl.autoLoad();
-        } catch (e) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Error Fetching: $e")));
+        app.fetchLyricsData(
+          app.track,
+          onError: (dynamic e) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text("Error Fetching: $e")));
+          },
+        );
+        // if (busyFeching) return;
+        // try {
+        //   busyFeching = true;
+        //   setState(() {});
+        //   await app.loadOnChanged();
+        // } catch (e) {
 
-          ctrl.setShowTrackMode(false);
-        } finally {
-          setState(() {});
-          busyFeching = false;
-        }
+        //   app.setShowTrackMode(false);
+        // } finally {
+        //   setState(() {});
+        //   busyFeching = false;
+        // }
       },
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -183,7 +186,7 @@ class _HomePageState extends State<HomePage> {
                   : EdgeInsetsGeometry.all(0),
               duration: Durations.long1,
               child: FutureBuilder(
-                future: ctrl.image,
+                future: app.image,
                 builder: (c, s) {
                   return s.data ??
                       Center(
@@ -205,13 +208,13 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 30),
             FittedBox(
               child: Text(
-                ctrl.info?.trackName ?? "",
+                app.track?.trackName ?? "",
                 style: Theme.of(
                   context,
                 ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
-            Text(ctrl.info?.artistName ?? ""),
+            Text(app.track?.artistName ?? ""),
             busyFeching
                 ? LinearProgressIndicator()
                 : Text(
@@ -238,11 +241,11 @@ class _HomePageState extends State<HomePage> {
     ],
   );
 
-  Widget _buildAccessRequired(BuildContext context, AppController? ctrl) {
-    if (ctrl == null) {
+  Widget _buildAccessRequired(BuildContext context, AppController? app) {
+    if (app == null) {
       return LinearProgressIndicator();
     }
-    if (ctrl.hasNotificationAccess) {
+    if (AppController.hasNotificationAccess) {
       return IconButton(onPressed: () {}, icon: Icon(Icons.search));
     }
     return Column(
@@ -258,6 +261,17 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
+}
+
+extension on AppController {
+  Future<void> Function(Duration) get seekTo => selectedService.seekTo;
+
+  // Future<Duration> Function() get position =>
+  //     () => selectedService.progress ?? Duration.zero;
+
+  double? get progressValue => 0.0;
+
+  get track => selectedService.track;
 }
 
 Future<void> openSettingsThenRestart(BuildContext context) async {

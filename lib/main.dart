@@ -10,12 +10,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppController(false),
-      child: const MyApp(),
-    ),
-  );
+  final app = AppController();
+
+  runApp(ChangeNotifierProvider(create: (_) => app, child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -60,7 +57,8 @@ class InitialPage extends StatelessWidget {
 
     final access =
         await MusicNotificationService.hasNotificationAccess() ?? false;
-    Provider.of<AppController>(context, listen: false).setHasAccess(access);
+    AppController.hasNotificationAccess = access;
+    // Provider.of<AppController>(context, listen: false);
     return access;
   }
 }

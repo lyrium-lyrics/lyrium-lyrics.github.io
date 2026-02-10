@@ -15,6 +15,7 @@ class LyricsView extends StatefulWidget {
 
   final TextStyle? textStyle;
   final TextStyle? highlightTextStyle;
+  final TextStyle? completedTextStyle;
   final bool? editMode;
   const LyricsView({
     super.key,
@@ -23,6 +24,7 @@ class LyricsView extends StatefulWidget {
     this.textStyle,
     this.highlightTextStyle,
     this.editMode,
+    this.completedTextStyle,
   });
 
   bool get isEditMode => editMode ?? false;
@@ -51,28 +53,28 @@ class _LyricsViewState extends State<LyricsView> {
 
     buildSpans();
 
-    watchManager = ClockManager((Duration elapsed) {
-      if (mounted) {
-        if (elapsed > duration) {
-          elapsed = duration;
-          watchManager.pause();
-        }
+    // watchManager = ClockManager((Duration elapsed) {
+    //   if (mounted) {
+    //     if (elapsed > duration) {
+    //       elapsed = duration;
+    //       watchManager.pause();
+    //     }
 
-        setState(() {
-          newPosition = elapsed;
-          position = elapsed.inMilliseconds / duration.inMilliseconds;
+    //     setState(() {
+    //       newPosition = elapsed;
+    //       position = elapsed.inMilliseconds / duration.inMilliseconds;
 
-          lyindex = lyrics.position(newPosition, lyindex);
-        });
-        scrollto(lyindex);
-      }
-    });
-    Future.microtask(() async {
-      watchManager.seek(await widget.controller.getPosition());
-      if (widget.controller.isPlaying) {
-        watchManager.play(startfrom: widget.controller.atPosition);
-      }
-    });
+    //       lyindex = lyrics.position(newPosition, lyindex);
+    //     });
+    //     scrollto(lyindex);
+    //   }
+    // });
+    // Future.microtask(() async {
+    //   watchManager.seek(await widget.controller.getPosition());
+    //   if (widget.controller.isPlaying) {
+    //     watchManager.play(startfrom: widget.controller.atPosition);
+    //   }
+    // });
     super.initState();
   }
 
@@ -115,6 +117,8 @@ class _LyricsViewState extends State<LyricsView> {
                   ..onTap = () => incrementLyric(index - lyindex),
                 style: index == lyindex
                     ? widget.highlightTextStyle
+                    : index < lyindex
+                    ? widget.completedTextStyle
                     : widget.textStyle,
               ),
             ],
@@ -126,6 +130,8 @@ class _LyricsViewState extends State<LyricsView> {
   higlight() {
     buildSpans();
   }
+
+  TextStyle textDectoration = TextStyle(height: 1.5);
 
   @override
   Widget build(BuildContext context) {
@@ -146,8 +152,10 @@ class _LyricsViewState extends State<LyricsView> {
               return true;
             },
             child: SingleChildScrollView(
-              child: RichText(text: TextSpan(children: spans)),
-            ), // buildscrolling(),
+              child: RichText(
+                text: TextSpan(style: textDectoration, children: spans),
+              ),
+            ),
           ),
         ),
 

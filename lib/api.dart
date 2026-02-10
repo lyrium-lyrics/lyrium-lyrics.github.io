@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:lyrium/models.dart';
 
-class ApiHandler {
+class RequestHandler {
   String namespace = "lrclib";
   final String baseUrl;
 
-  ApiHandler({this.baseUrl = 'https://lrclib.net'});
+  RequestHandler({this.baseUrl = 'https://lrclib.net'});
 
   Future<T> _get<T>(
     String path, {

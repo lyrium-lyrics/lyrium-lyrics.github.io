@@ -2,6 +2,7 @@ import 'package:lyrium/api.dart';
 import 'package:lyrium/controller.dart';
 import 'package:lyrium/models.dart';
 import 'package:lyrium/datahelper.dart';
+import 'package:lyrium/utils/duration.dart';
 import 'package:lyrium/utils/search_terms.dart';
 import 'package:lyrium/widgets/app_drawer.dart';
 import 'package:lyrium/widgets/lyrics_sheet.dart';
@@ -90,7 +91,7 @@ class _QuickSearchState extends State<QuickSearch> {
   }
 
   Future<void> _searchLRCLIB() async {
-    final api = ApiHandler();
+    final api = RequestHandler();
     lastresults = await api.searchTracks(query).then((c) {
       if (initailQuery != null) {
         final target = initailQuery!.duration;
@@ -155,7 +156,6 @@ class _QuickSearchState extends State<QuickSearch> {
                 minLines: 1,
                 controller: _controller,
                 textInputAction: TextInputAction.search,
-                onChanged: (_) => repriotirize(),
                 onSubmitted: (_) => _search(),
                 decoration: InputDecoration(
                   hintText: 'Search...',
@@ -268,31 +268,6 @@ class _QuickSearchState extends State<QuickSearch> {
       },
     );
   }
-
-  void repriotirize() {
-    // final additional = _controller.text.substring(lastquery.length);
-    // final words = additional
-    //     .split(" ")
-    //     .map((x) => x.trim())
-    //     .where((t) => t != "")
-    //     .toList()
-    //     .reversed;
-
-    // final priority = _results
-    //     .where(
-    //       (t) => words.any((word) => t.plainLyrics?.contains((word)) ?? false),
-    //     )
-    //     .toList();
-
-    // _results.sort(
-    //   (a, b) => priority.any((t) => t.id == a.id)
-    //       ? 1
-    //       : priority.any((t) => t.id == b.id)
-    //       ? -1
-    //       : 0,
-    // );
-    setState(() {});
-  }
 }
 
 class DefaultHeader extends StatelessWidget {
@@ -332,6 +307,7 @@ class ResultsListView extends StatelessWidget {
   final String query;
   final bool saved;
   final dynamic onParentChanged;
+
   const ResultsListView({
     super.key,
     required this.songs,
@@ -342,18 +318,33 @@ class ResultsListView extends StatelessWidget {
 
   Widget _highlight(String text, String query, {TextStyle? style}) {
     if (query.isEmpty) return Text(text, style: style);
-    final lower = text.toLowerCase();
-    final q = query.toLowerCase();
+
+    final keywords = query
+        .trim()
+        .toLowerCase()
+        .split(' ')
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (keywords.isEmpty) return Text(text, style: style);
+
+    final pattern = keywords.map((word) => RegExp.escape(word)).join('|');
+    final regExp = RegExp(pattern, caseSensitive: false);
+
     final spans = <TextSpan>[];
     int start = 0;
-    int index;
-    while ((index = lower.indexOf(q, start)) != -1) {
-      if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: style));
+
+    for (final match in regExp.allMatches(text)) {
+      if (match.start > start) {
+        spans.add(
+          TextSpan(text: text.substring(start, match.start), style: style),
+        );
       }
+
       spans.add(
         TextSpan(
-          text: text.substring(index, index + q.length),
+          text: text.substring(match.start, match.end),
           style: style?.copyWith(
             backgroundColor: const Color.fromARGB(255, 243, 255, 135),
             fontWeight: FontWeight.w600,
@@ -361,40 +352,74 @@ class ResultsListView extends StatelessWidget {
           ),
         ),
       );
-      start = index + q.length;
+      start = match.end;
     }
+
+    // Add remaining text
     if (start < text.length) {
       spans.add(TextSpan(text: text.substring(start), style: style));
     }
+
     return RichText(
       text: TextSpan(children: spans, style: style),
     );
   }
 
+  // UPDATED: Scoring based on how many words match
+  int _getMatchScore(LyricsTrack item, String query) {
+    if (query.isEmpty) return 0;
+
+    final lowerQuery = query.toLowerCase();
+    // Split query into words
+    final keywords = lowerQuery.split(' ').where((s) => s.isNotEmpty).toList();
+    final title = item.track.trackName.toLowerCase();
+    final artist = item.track.artistName.toLowerCase();
+
+    int score = 0;
+
+    for (var word in keywords) {
+      if (title.contains(word)) score += 10; // Title match worth more
+      if (artist.contains(word)) score += 5; // Artist match worth less
+    }
+
+    if (title == lowerQuery) score += 50;
+    if (title.startsWith(lowerQuery)) score += 20;
+
+    return score;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sortedSongs = List<LyricsTrack>.from(songs);
+    sortedSongs.sort((a, b) {
+      final scoreA = _getMatchScore(a, query);
+      final scoreB = _getMatchScore(b, query);
+      return scoreB.compareTo(scoreA);
+    });
+
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: songs.length,
+      itemCount: sortedSongs.length,
       separatorBuilder: (_, __) => const SizedBox(height: 0),
       itemBuilder: (context, index) {
-        final LyricsTrack itemd = songs[index];
+        final LyricsTrack itemd = sortedSongs[index];
         final Track item = itemd.track;
         final title = item.trackName;
-        final artist = item.artistName ?? "";
+        final artist = item.artistName;
 
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,
             vertical: 10,
           ),
-          leading: CircleAvatar(radius: 26, child: Icon(Icons.album_outlined)),
+          leading: const CircleAvatar(
+            radius: 26,
+            child: Icon(Icons.album_outlined),
+          ),
           title: _highlight(
             title,
             query,
-            style: Theme.of(context)
-                .textTheme
-                .labelLarge, //TODO: Theme.of(context).listTileTheme.subtitleTextStyle does not work,
+            style: Theme.of(context).textTheme.labelLarge,
           ),
           subtitle: _highlight(
             artist,
@@ -404,12 +429,16 @@ class ResultsListView extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children:
-                [] // item.labels
+                [
+                      (itemd.syncedLyrics != null ? "Synced" : ""),
+                      (itemd.track.duration.toShortString()),
+                    ]
+                    .where((e) => e != "")
                     .map(
                       (s) => Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Chip(
-                          label: Text(s),
+                          label: Text(s.toString()),
                           labelStyle: TextStyle(
                             fontSize: 12,
                             color: Colors.indigo.shade700,
