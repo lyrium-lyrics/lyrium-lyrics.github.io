@@ -47,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
 
 extension LyricsDatabase on AppDatabase {
   Future<List<Lyric>> all() {
-    return (select(this.lyrics)..orderBy([
+    return (select(lyrics)..orderBy([
           (u) => OrderingTerm(expression: u.id, mode: OrderingMode.desc),
           (u) => OrderingTerm(expression: u.id),
         ]))

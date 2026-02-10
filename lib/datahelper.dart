@@ -94,7 +94,7 @@ class DataHelper {
       return fallbackfinder(trackInfo);
     }
 
-    return result == null ? null : LyricsTrack.fromDrift(result);
+    return LyricsTrack.fromDrift(result);
   }
 
   Future<bool> updateTrack(LyricsTrack data) async {

@@ -47,7 +47,7 @@ class AppDrawer extends StatelessWidget {
                         onPressed: () {
                           launchUrl(
                             Uri.parse(
-                              "https://fsdtmr.github.io/lyrium/index.html",
+                              "https://lyrium-lyrics.github.io/index.html",
                             ),
                           );
                         },

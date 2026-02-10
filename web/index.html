@@ -1,68 +1,87 @@
 <!doctype html>
 <html>
-    <head>
-        <base href="$FLUTTER_BASE_HREF" />
 
-        <meta charset="UTF-8" />
-        <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
-        <meta name="description" content="A new Flutter project." />
+<head>
+    <base href="$FLUTTER_BASE_HREF" />
 
-        <!-- iOS meta tags & icons -->
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <meta name="apple-mobile-web-app-title" content="lyrium" />
-        <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="A new Flutter project." />
 
-        <!-- Favicon -->
-        <link rel="icon" type="image/png" href="favicon.png" />
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="lyrium" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
-        <title>lyrium</title>
-        <link rel="manifest" href="manifest.json" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
 
-        <style>
-            body {
-                margin: 0;
-                height: 100vh;
-                background: black;
-                overflow: hidden;
-                position: relative;
+    <title>lyrium</title>
+    <link rel="manifest" href="manifest.json" />
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: black;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .logo {
+            position: absolute;
+            width: 150px;
+            height: auto;
+
+        }
+
+        @keyframes moveX {
+            0% {
+                left: 0;
             }
 
-            .logo {
-                position: absolute;
-                width: 150px;
-                height: auto;
-                animation:
-                    moveX 6s linear infinite alternate,
-                    moveY 4s linear infinite alternate;
+            100% {
+                left: calc(100% - 150px);
+            }
+        }
+
+        @keyframes moveY {
+            0% {
+                top: 0;
             }
 
-            @keyframes moveX {
-                0% {
-                    left: 0;
-                }
-
-                100% {
-                    left: calc(100% - 150px);
-                }
+            100% {
+                top: calc(100% - 100px);
             }
+        }
+    </style>
+</head>
 
-            @keyframes moveY {
-                0% {
-                    top: 0;
-                }
+<body>
+    <div class="loader-container" id="flutterview">
+        <img class="logo" src="icons/Icon-192.png" />
+    </div>
+    <script src="flutter_bootstrap.js" async></script>
+</body>
 
-                100% {
-                    top: calc(100% - 100px);
-                }
-            }
-        </style>
-    </head>
 
-    <body>
-        <script src="flutter_bootstrap.js" async></script>
-        <div class="loader-container">
-            <img class="logo" src="icons/Icon-192.png" />
-        </div>
-    </body>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registered!'))
+                .catch(err => console.log('Registration failed', err));
+        });
+    }
+</script>
+
 </html>

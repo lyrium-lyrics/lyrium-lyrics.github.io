@@ -55,7 +55,7 @@ class InitialPage extends StatelessWidget {
 
   Future<bool> _loadApp(context) async {
     packageInfo = await PackageInfo.fromPlatform(
-      baseUrl: "https://fsdtmr.github.io/lyrium/",
+      baseUrl: "https://lyrium-lyrics.github.io/",
     );
 
     final access =

@@ -47,7 +47,7 @@ jobs:
         run: flutter test --no-pub --coverage
 
       - name: Build Web
-        run: flutter build web --wasm --pwa-strategy=offline-first  --base-href "/lyrium/"
+        run: flutter build web --wasm --pwa-strategy=offline-first  --base-href "/"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
