@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:lyrium/api.dart';
 import 'package:lyrium/datahelper.dart';
 import 'package:lyrium/editor.dart';
@@ -8,7 +7,6 @@ import 'package:lyrium/service/service.dart';
 import 'package:lyrium/models.dart';
 import 'package:lyrium/utils/duration.dart';
 import 'package:lyrium/utils/demo_notification.dart';
-import 'package:lyrium/widgets/submit_form.dart';
 
 class AppController extends ChangeNotifier {
   // void submitLyrics(BuildContext context) {
@@ -172,7 +170,7 @@ class AppController extends ChangeNotifier {
     system_service!.start(
       onTrackChanged: (Track track) {
         loadOnChanged(track);
-        image = selectedService!.getImage();
+        image = selectedService.getImage();
       },
       onStateChanged: () {
         notifyListeners();
@@ -249,6 +247,7 @@ class AppController extends ChangeNotifier {
     selectedService = demo_service!;
     demo_service?.setTrack(song);
     if (autoPlay) demo_service?.play();
+    lyrics = song;
     showTrack = true;
     notifyListeners();
   }
@@ -282,6 +281,8 @@ class TempController extends NonListeningController {
   final Duration? atPosition;
   @override
   final bool isPlaying;
+
+  bool paused = true;
   TempController({
     required super.lyrics,
     required this.onTogglePause,

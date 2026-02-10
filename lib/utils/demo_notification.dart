@@ -7,10 +7,11 @@ import 'package:lyrium/utils/duration.dart';
 class DemoNotificationService implements MusicNotificationService {
   ClockManager clock = ClockManager(onUpdate);
 
+  @override
   Track? track;
 
   setTrack(LyricsTrack? newtrack) {
-    track = track;
+    track = newtrack?.track;
     clock = ClockManager(onUpdate);
     onUpdate(clock.elapsed);
   }

@@ -154,26 +154,21 @@ class _HomePageState extends State<HomePage> {
   Widget _buildFetcher(BuildContext context, AppController app) {
     return GestureDetector(
       onTap: () async {
-        app.fetchLyricsData(
-          app.track,
-          onError: (dynamic e) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text("Error Fetching: $e")));
-          },
-        );
-        // if (busyFeching) return;
-        // try {
-        //   busyFeching = true;
-        //   setState(() {});
-        //   await app.loadOnChanged();
-        // } catch (e) {
-
-        //   app.setShowTrackMode(false);
-        // } finally {
-        //   setState(() {});
-        //   busyFeching = false;
-        // }
+        busyFeching = true;
+        setState(() {});
+        app
+            .fetchLyricsData(
+              app.track,
+              onError: (dynamic e) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text("Error Fetching: $e")));
+              },
+            )
+            .then((e) {
+              busyFeching = false;
+              setState(() {});
+            });
       },
       child: Padding(
         padding: const EdgeInsets.all(20.0),

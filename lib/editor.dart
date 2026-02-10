@@ -304,11 +304,16 @@ class _LyricsEditorState extends State<LyricsEditor> {
             editMode: true,
             textStyle: textStyle,
             highlightTextStyle: highlighttextStyle,
-            controller: NoOpController(
+            controller: TempController(
               lyrics: widget.track.copyWith(
                 syncedLyrics: textEditingController.text,
                 duration: lrcln.duration.toDouble(),
               ),
+              onTogglePause: (bool p1) async {},
+              onSeek: (Duration p1) async {
+                return;
+              },
+              isPlaying: false,
             ),
             onSave: () {
               return opensubmitform(

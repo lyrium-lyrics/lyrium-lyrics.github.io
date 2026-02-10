@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart';
 
-const bool isWeb =false;
+const bool isWeb = false;
 
 Future<QueryExecutor> openPlatformConnection(
   String name, {

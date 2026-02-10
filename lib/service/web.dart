@@ -2,7 +2,7 @@ import 'package:drift/backends.dart';
 import 'package:drift/wasm.dart';
 import 'package:flutter/widgets.dart';
 
-const bool isWeb =true;
+const bool isWeb = true;
 
 Future<QueryExecutor> openPlatformConnection(
   String name, {

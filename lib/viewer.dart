@@ -2,14 +2,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lyrium/controller.dart';
 import 'package:lyrium/editor.dart';
-import 'package:lyrium/utils/clock.dart';
 import 'package:lyrium/models.dart';
 import 'package:lyrium/utils/duration.dart';
 import 'package:lyrium/utils/lrc.dart';
 import 'package:collection/collection.dart';
 
 class LyricsView extends StatefulWidget {
-  final NonListeningController controller;
+  final TempController controller;
 
   final Future<void> Function() onSave;
 
@@ -40,7 +39,7 @@ class _LyricsViewState extends State<LyricsView> {
   double position = 0.0;
   Duration newPosition = const Duration(seconds: 0);
   int lyindex = -1;
-  late ClockManager watchManager;
+  // late ClockManager watchManager;
 
   late List<GlobalKey> keys;
 
@@ -78,28 +77,25 @@ class _LyricsViewState extends State<LyricsView> {
     super.initState();
   }
 
-  @override
-  void didUpdateWidget(covariant LyricsView oldWidget) {
-    if (widget.controller.isPlaying != oldWidget.controller.isPlaying) {
-      if (oldWidget.controller.isPlaying != widget.controller.isPlaying) {
-        if (widget.controller.isPlaying) {
-          watchManager.play();
-          watchManager.seek(
-            widget.controller.atPosition ?? watchManager.elapsed,
-          );
-        } else {
-          watchManager.pause();
-          // Bug: seeking creates a invalid state
-          // watchManager.seek(widget.controller.atPosition ?? watchManager.elapsed);
-        }
-      }
-    } else if (widget.controller.atPosition !=
-        oldWidget.controller.atPosition) {
-      watchManager.seek(widget.controller.atPosition ?? watchManager.elapsed);
-    }
+  // @override
+  // void didUpdateWidget(covariant LyricsView oldWidget) {
+  //   if (widget.controller.isPlaying != oldWidget.controller.isPlaying) {
+  //     if (oldWidget.controller.isPlaying != widget.controller.isPlaying) {
+  //       if (widget.controller.isPlaying) {
+  //         widget.controller.play();
+  //       } else {
+  //         watchManager.pause();
+  //         // Bug: seeking creates a invalid state
+  //         // watchManager.seek(widget.controller.atPosition ?? watchManager.elapsed);
+  //       }
+  //     }
+  //   } else if (widget.controller.atPosition !=
+  //       oldWidget.controller.atPosition) {
+  //     watchManager.seek(widget.controller.atPosition ?? watchManager.elapsed);
+  //   }
 
-    super.didUpdateWidget(oldWidget);
-  }
+  //   super.didUpdateWidget(oldWidget);
+  // }
 
   late List<TextSpan> spans;
 
@@ -214,14 +210,14 @@ class _LyricsViewState extends State<LyricsView> {
               ),
               IconButton(
                 icon: Icon(
-                  watchManager.paused ? Icons.play_arrow : Icons.pause,
+                  widget.controller.paused ? Icons.play_arrow : Icons.pause,
                 ),
                 onPressed: () {
-                  watchManager.paused
-                      ? watchManager.play()
-                      : watchManager.pause();
+                  // watchManager.paused
+                  //     ? watchManager.play()
+                  //     : watchManager.pause();
 
-                  widget.controller.togglePause(watchManager.paused);
+                  widget.controller.togglePause(false);
                 },
               ),
               IconButton(
@@ -253,7 +249,7 @@ class _LyricsViewState extends State<LyricsView> {
       lyindex = lyrics.position(newPosition, lyindex); //findlyric(newPosition);
     });
 
-    watchManager.seek(newPosition);
+    // watchManager.seek(newPosition);
 
     widget.controller.seek(newPosition);
   }
@@ -269,7 +265,7 @@ class _LyricsViewState extends State<LyricsView> {
       higlight();
     });
 
-    watchManager.seek(newPosition);
+    // watchManager.seek(newPosition);
 
     widget.controller.seek(newPosition);
   }
@@ -297,6 +293,10 @@ class _LyricsViewState extends State<LyricsView> {
     animatingto = lyindex;
   }
 }
+
+// extension on NonListeningController {
+//   bool get paused => ;
+// }
 
 extension on List<Line> {
   List<LRCLine> get withDuration => whereType<LRCLine>().toList();
