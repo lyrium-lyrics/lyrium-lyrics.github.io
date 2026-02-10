@@ -44,7 +44,7 @@ void showLyricsSheet(
                           context,
                           listen: false,
                         );
-                        ctrl.openLyrics(song);
+                        ctrl.openLyrics(song, autoPlay: true);
 
                         Navigator.pop(context);
                       },
