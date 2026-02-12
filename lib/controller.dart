@@ -143,19 +143,20 @@ class AppController extends ChangeNotifier {
   // //   return "$minutes:$seconds";
   // // }
 
-  // @override
-  // void dispose() {
-  //   _polling?.cancel();
-  //   _notificationSubscription?.cancel();
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    demo_service?.dispose();
+    system_service?.dispose();
+
+    super.dispose();
+  }
 
   static bool hasNotificationAccess = false;
 
   DemoNotificationService? demo_service = DemoNotificationService();
-  MusicNotificationService? system_service = MusicNotificationService();
+  MusicService? system_service = notificationService;
 
-  late MusicNotificationService selectedService;
+  late MusicService selectedService;
 
   LyricsTrack? lyrics;
   Future<Image?>? image;
@@ -245,7 +246,7 @@ class AppController extends ChangeNotifier {
 
   void openLyrics(LyricsTrack song, {required bool autoPlay}) {
     selectedService = demo_service!;
-    demo_service?.setTrack(song);
+    demo_service?.setTrack(song.track);
     if (autoPlay) demo_service?.play();
     lyrics = song;
     showTrack = true;
@@ -255,65 +256,24 @@ class AppController extends ChangeNotifier {
 
 extension on LyricsTrack {
   LyricsTrack fallBackDuration() {
-    if (track.duration.toDuration() < Durations.extralong4) {
+    if (track.duration < Durations.extralong4) {
       return copyWith(duration: Duration(hours: 1).toDouble());
     }
     return this;
   }
 }
 
-abstract class NonListeningController {
+class TempController {
   final LyricsTrack lyrics;
+  final MusicService service;
 
-  NonListeningController({required this.lyrics});
-  Future<void> togglePause(bool b);
-  Future<void> seek(Duration duration);
+  TempController({required this.lyrics, required this.service});
 
-  bool get isPlaying;
-  Duration? get atPosition;
-  Duration get duration;
-}
+  Duration? get elapsed => service.progress;
 
-class TempController extends NonListeningController {
-  final Future<void> Function(bool) onTogglePause;
-  final Future<void> Function(Duration) onSeek;
-  @override
-  final Duration? atPosition;
-  @override
-  final bool isPlaying;
+  bool get isPlaying => service.isPlaying;
 
-  bool paused = true;
-  TempController({
-    required super.lyrics,
-    required this.onTogglePause,
-    required this.onSeek,
-    required this.isPlaying,
-    this.atPosition,
-  });
-
-  @override
-  Future<void> seek(Duration duration) => onSeek(duration);
-  @override
-  Future<void> togglePause(bool b) => onTogglePause(b);
-  @override
-  Duration get duration => lyrics.track.duration.toDuration();
-}
-
-class NoOpController extends NonListeningController {
-  NoOpController({required super.lyrics});
-
-  @override
-  Duration? get atPosition => Duration.zero;
-
-  @override
-  bool get isPlaying => true;
-
-  @override
-  Future<void> seek(Duration duration) async {}
-
-  @override
-  Future<void> togglePause(bool b) async {}
-
-  @override
-  Duration get duration => lyrics.track.duration.toDuration();
+  Future<void> seek(Duration duration) => service.seekTo(duration);
+  Future<void> togglePause(bool b) => service.togglePause();
+  Duration get duration => lyrics.track.duration;
 }

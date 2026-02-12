@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lyrium/controller.dart';
@@ -39,7 +41,7 @@ class _LyricsViewState extends State<LyricsView> {
   double position = 0.0;
   Duration newPosition = const Duration(seconds: 0);
   int lyindex = -1;
-  // late ClockManager watchManager;
+  late Timer timer;
 
   late List<GlobalKey> keys;
 
@@ -52,50 +54,25 @@ class _LyricsViewState extends State<LyricsView> {
 
     buildSpans();
 
-    // watchManager = ClockManager((Duration elapsed) {
-    //   if (mounted) {
-    //     if (elapsed > duration) {
-    //       elapsed = duration;
-    //       watchManager.pause();
-    //     }
+    timer = Timer.periodic(Durations.medium4, (t) {
+      setState(() {
+        // duration = ?? duration;
+        newPosition = widget.controller.elapsed ?? newPosition;
+        lyindex = lyrics.position(newPosition, lyindex);
+        position = newPosition.inMilliseconds / duration.inMilliseconds;
+      });
 
-    //     setState(() {
-    //       newPosition = elapsed;
-    //       position = elapsed.inMilliseconds / duration.inMilliseconds;
+      scrollto(lyindex);
+    });
 
-    //       lyindex = lyrics.position(newPosition, lyindex);
-    //     });
-    //     scrollto(lyindex);
-    //   }
-    // });
-    // Future.microtask(() async {
-    //   watchManager.seek(await widget.controller.getPosition());
-    //   if (widget.controller.isPlaying) {
-    //     watchManager.play(startfrom: widget.controller.atPosition);
-    //   }
-    // });
     super.initState();
   }
 
-  // @override
-  // void didUpdateWidget(covariant LyricsView oldWidget) {
-  //   if (widget.controller.isPlaying != oldWidget.controller.isPlaying) {
-  //     if (oldWidget.controller.isPlaying != widget.controller.isPlaying) {
-  //       if (widget.controller.isPlaying) {
-  //         widget.controller.play();
-  //       } else {
-  //         watchManager.pause();
-  //         // Bug: seeking creates a invalid state
-  //         // watchManager.seek(widget.controller.atPosition ?? watchManager.elapsed);
-  //       }
-  //     }
-  //   } else if (widget.controller.atPosition !=
-  //       oldWidget.controller.atPosition) {
-  //     watchManager.seek(widget.controller.atPosition ?? watchManager.elapsed);
-  //   }
-
-  //   super.didUpdateWidget(oldWidget);
-  // }
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
 
   late List<TextSpan> spans;
 
@@ -188,6 +165,7 @@ class _LyricsViewState extends State<LyricsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.edit_note),
                 onPressed: () {
@@ -210,7 +188,7 @@ class _LyricsViewState extends State<LyricsView> {
               ),
               IconButton(
                 icon: Icon(
-                  widget.controller.paused ? Icons.play_arrow : Icons.pause,
+                  widget.controller.isPlaying ? Icons.pause : Icons.play_arrow,
                 ),
                 onPressed: () {
                   // watchManager.paused
@@ -233,6 +211,7 @@ class _LyricsViewState extends State<LyricsView> {
                 onPressed: () => widget.onSave(),
                 icon: Icon(Icons.bookmark_outline),
               ),
+              SizedBox(width: 8),
             ],
           ),
         ],
@@ -248,8 +227,6 @@ class _LyricsViewState extends State<LyricsView> {
 
       lyindex = lyrics.position(newPosition, lyindex); //findlyric(newPosition);
     });
-
-    // watchManager.seek(newPosition);
 
     widget.controller.seek(newPosition);
   }

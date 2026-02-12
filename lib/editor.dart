@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lyrium/controller.dart';
 import 'package:lyrium/models.dart';
+import 'package:lyrium/utils/demo_notification.dart';
 import 'package:lyrium/utils/duration.dart';
 import 'package:lyrium/utils/lrc.dart';
 import 'package:lyrium/utils/string.dart';
@@ -309,11 +310,7 @@ class _LyricsEditorState extends State<LyricsEditor> {
                 syncedLyrics: textEditingController.text,
                 duration: lrcln.duration.toDouble(),
               ),
-              onTogglePause: (bool p1) async {},
-              onSeek: (Duration p1) async {
-                return;
-              },
-              isPlaying: false,
+              service: DemoNotificationService(),
             ),
             onSave: () {
               return opensubmitform(

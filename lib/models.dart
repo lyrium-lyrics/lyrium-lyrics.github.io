@@ -1,11 +1,12 @@
 import 'package:lyrium/storage/local.dart';
+import 'package:lyrium/utils/duration.dart';
 
 class Track {
   final String namespace;
   final String artistName;
   final String trackName;
   final String albumName;
-  final double duration; // ss.mss
+  final Duration duration; // ss.mss
 
   Track({
     required this.namespace,
@@ -30,7 +31,7 @@ class Track {
       trackName: lyric.title,
       artistName: lyric.artist ?? "Unknown",
       albumName: lyric.album ?? "Unknown",
-      duration: lyric.duration,
+      duration: lyric.duration.toDuration(),
       namespace: lyric.namespace,
     );
   }
@@ -40,7 +41,7 @@ class Track {
     String? trackName,
     String? artistName,
     String? albumName,
-    double? duration,
+    Duration? duration,
   }) {
     return Track(
       namespace: namespace ?? this.namespace,
@@ -130,7 +131,7 @@ class LyricsTrack {
         trackName: trackName,
         artistName: artistName,
         albumName: albumName,
-        duration: duration,
+        duration: duration.toDuration(),
       ),
 
       instrumental: instrumental ?? this.instrumental,

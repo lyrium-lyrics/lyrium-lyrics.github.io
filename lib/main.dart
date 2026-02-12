@@ -55,8 +55,7 @@ class InitialPage extends StatelessWidget {
       baseUrl: "https://lyrium-lyrics.github.io/",
     );
 
-    final access =
-        await MusicNotificationService.hasNotificationAccess() ?? false;
+    final access = await notificationService.hasNotificationAccess();
     AppController.hasNotificationAccess = access;
     // Provider.of<AppController>(context, listen: false);
     return access;

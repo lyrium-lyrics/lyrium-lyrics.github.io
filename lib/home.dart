@@ -114,15 +114,10 @@ class _HomePageState extends State<HomePage> {
         );
 
         return SizedBox(
-          // width: 500,
-          // height: 500,
           child: LyricsView(
             controller: TempController(
               lyrics: track ?? LyricsTrack.empty(),
-              isPlaying: isPlaying,
-              atPosition: atPosition,
-              onTogglePause: (b) => app.selectedService.togglePause(),
-              onSeek: app.seekTo,
+              service: app.selectedService,
             ),
             textStyle: textStyle,
             highlightTextStyle: highlighttextStyle,
@@ -259,18 +254,13 @@ class _HomePageState extends State<HomePage> {
 }
 
 extension on AppController {
-  Future<void> Function(Duration) get seekTo => selectedService.seekTo;
-
-  // Future<Duration> Function() get position =>
-  //     () => selectedService.progress ?? Duration.zero;
-
   double? get progressValue => 0.0;
 
   get track => selectedService.track;
 }
 
 Future<void> openSettingsThenRestart(BuildContext context) async {
-  await MusicNotificationService.openNotificationAccessSettings();
+  await notificationService.openNotificationAccessSettings();
   Navigator.pushReplacement(
     context,
     MaterialPageRoute(builder: (c) => InitialPage()),

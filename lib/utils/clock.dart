@@ -17,7 +17,7 @@ class ClockManager {
   }
 
   void play({Duration? startfrom}) {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 556), (timer) {
       onUpdate?.call(elapsed);
     });
 
@@ -41,4 +41,8 @@ class ClockManager {
       : DateTime.now().difference(_startTime!);
 
   bool get paused => _timer == null ? true : !_timer!.isActive;
+
+  void dispose() {
+    _timer?.cancel();
+  }
 }
