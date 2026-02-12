@@ -34,6 +34,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create Git tag
+        if: ${{ github.ref == 'refs/heads/develop' }}
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
