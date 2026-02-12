@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lyrium/models.dart';
+import 'package:lyrium/service/service.dart';
+import 'package:lyrium/utils/demo_notification.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart';
@@ -22,69 +26,128 @@ Future<QueryExecutor> openPlatformConnection(
   return NativeDatabase(file);
 }
 
-class NotificationConnection {
+final MusicService notificationConnection = Platform.isAndroid
+    ? SupportedConnection()
+    : DemoNotificationService();
+
+class SupportedConnection extends MusicService {
   static const _eventChannel = EventChannel("com.example.lyrium");
   static const _methodChannel = MethodChannel("com.example.lyrium/methods");
+  static const _kIsPlaying = 'isPlaying';
 
-  static Stream<Map?> get notifications async* {
+  @override
+  Duration? duration;
+  @override
+  Duration? elapsed;
+  @override
+  bool isPlaying = false;
+  @override
+  Track? track;
+
+  /// Stream of raw data from the native platform
+  Stream<Map?> get _notifications async* {
     yield* _eventChannel.receiveBroadcastStream().map((event) => event as Map?);
   }
 
-  static Future<void> openNotificationAccessSettings() async {
-    await _methodChannel.invokeMethod("openNotificationAccessSettings");
+  late StreamSubscription _subscription;
+  @override
+  void start({
+    required Function(Track track) onTrackChanged,
+    required Function() onStateChanged,
+    required Function() onUnsetTrack,
+  }) {
+    _subscription = _notifications.listen((data) {
+      if (data == null) {
+        track = null;
+        onUnsetTrack();
+        return;
+      }
+
+      final prevName = track?.trackName;
+      track = _parseData(data);
+
+      if (prevName != track?.trackName) {
+        // Track changed
+        if (track == null) {
+          onUnsetTrack();
+        } else {
+          onTrackChanged(track!);
+        }
+      } else {
+        // Only state (play/pause/progress) changed
+        onStateChanged();
+      }
+    });
   }
 
-  static Future<bool> update() async {
-    return await _methodChannel.invokeMethod("update");
+  Track _parseData(Map<dynamic, dynamic> data) {
+    duration = Duration(milliseconds: (data["duration"] as int?) ?? 0);
+    elapsed = Duration(milliseconds: (data["position"] as int?) ?? 0);
+    isPlaying = data[_kIsPlaying] as bool? ?? false;
+
+    return Track(
+      namespace: data["package"] ?? "Device",
+      artistName: data["artist"] ?? "Invalid",
+      trackName: data["title"] ?? "Invalid",
+      albumName: data["album"] ?? "Invalid",
+      duration: duration ?? Duration(days: 100),
+    );
   }
 
-  static Future<bool> seekTo(Duration position) async {
-    return await _methodChannel.invokeMethod("seekTo", position.inMilliseconds);
+  @override
+  Future<void> play() async => await _methodChannel.invokeMethod("play");
+
+  @override
+  Future<void> pause() async => await _methodChannel.invokeMethod("pause");
+
+  @override
+  Future<void> togglePause() async {
+    if (isPlaying) {
+      await pause();
+    } else {
+      await play();
+    }
   }
 
-  static Future<Duration> getPosition() async {
+  @override
+  Future<void> seekTo(Duration position) async {
+    await _methodChannel.invokeMethod("seekTo", position.inMilliseconds);
+  }
+
+  @override
+  Future<Duration> getPosition() async {
     final data = await _methodChannel.invokeMethod<int?>("getPosition");
     return Duration(milliseconds: data ?? 0);
   }
 
-  static Future<Image?> getImage() async {
+  @override
+  Future<Image?> getImage() async {
     final bytes = await _methodChannel.invokeMethod<Uint8List>("getImageData");
-    if (bytes != null) {
-      return Image.memory(bytes); // ready to display
-    }
-    return null;
+    return bytes != null ? Image.memory(bytes) : null;
   }
 
-  static bool imaginepause = true;
-  static togglePause() {
-    if (imaginepause) {
-      play();
-      imaginepause = !imaginepause;
-    } else {
-      pause();
-      imaginepause = !imaginepause;
-    }
-  }
-
-  static Future<bool> play() async {
-    return await _methodChannel.invokeMethod("play");
-  }
-
-  static Future<bool> pause() async {
-    return await _methodChannel.invokeMethod("pause");
-  }
-
-  static Future<bool> hasNotificationAccess() async {
+  @override
+  Future<bool> hasNotificationAccess() async {
     try {
-      // Invoke the native method 'hasNotificationAccess' and await the boolean result.
-      final bool result = await _methodChannel.invokeMethod(
-        'hasNotificationAccess',
-      );
-      return result;
+      return await _methodChannel.invokeMethod('hasNotificationAccess');
     } on PlatformException catch (e) {
-      // Handle potential errors, such as the method not being implemented.
       print("Failed to get notification access: '${e.message}'.");
       return false;
     }
+  }
+
+  @override
+  Future<void> openNotificationAccessSettings() async {
+    await _methodChannel.invokeMethod("openNotificationAccessSettings");
+  }
+
+  @override
+  Future<bool> update() async {
+    return await _methodChannel.invokeMethod("update");
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
   }
 }

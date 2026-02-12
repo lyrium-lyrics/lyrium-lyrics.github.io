@@ -2,96 +2,40 @@ import 'package:flutter/widgets.dart';
 import 'package:lyrium/models.dart';
 import 'package:lyrium/service/service.dart';
 import 'package:lyrium/utils/clock.dart';
-import 'package:lyrium/utils/duration.dart';
 
-class DemoNotificationService implements MusicNotificationService {
-  ClockManager clock = ClockManager(onUpdate);
+class DemoNotificationService extends MusicService {
+  late ClockManager _clock;
+  VoidCallback? _onStateChangedCallback;
+
+  DemoNotificationService() {
+    _clock = ClockManager((d) => _triggerUpdate());
+  }
 
   @override
   Track? track;
 
-  setTrack(LyricsTrack? newtrack) {
-    track = newtrack?.track;
-    clock = ClockManager(onUpdate);
-    onUpdate(clock.elapsed);
+  void setTrack(Track? newTrack) {
+    track = newTrack;
+    _clock = ClockManager((d) => _triggerUpdate());
+    _triggerUpdate();
   }
 
-  static onUpdate(Duration elapsed) {}
-
-  @override
-  Future<Image?> getImage() async {
-    return null;
+  void _triggerUpdate() {
+    _onStateChangedCallback?.call();
   }
 
   @override
-  Future<Duration> getPosition() {
-    // TODO: implement getPosition
-    throw UnimplementedError();
-  }
+  Duration get duration => track?.duration ?? Duration.zero;
 
   @override
-  // TODO: implement notifications
-  Stream<Map<dynamic, dynamic>?> get notifications =>
-      throw UnimplementedError();
+  bool get isPlaying => !_clock.playing;
 
   @override
-  Future<void> pause() {
-    // TODO: implement pause
-    throw UnimplementedError();
-  }
+  Duration? get elapsed => looped();
 
-  @override
-  Future<void> play() async {
-    clock.play();
-  }
-
-  @override
-  Future<void> seekTo(Duration du) async {
-    clock.seek(du);
-  }
-
-  @override
-  togglePause() {
-    clock.paused ? clock.play() : clock.pause();
-  }
-
-  @override
-  Future<dynamic> update() async {
-    onUpdate(clock.elapsed);
-  }
-
-  @override
-  Duration get duration => track?.duration.toDuration() ?? Duration.zero;
-
-  @override
-  Track? info;
-
-  @override
-  bool get isPlaying => !clock.paused;
-
-  @override
-  Duration? progress;
-
-  @override
-  Track parseData(Map<dynamic, dynamic> data) {
-    // TODO: implement parseData
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> seekFraction(double fraction) {
-    // TODO: implement seekFraction
-    throw UnimplementedError();
-  }
-
-  @override
-  set isPlaying(bool value) {
-    // TODO: implement isPlaying
-  }
-
-  @override
-  set duration(Duration? value) {
-    // TODO: implement duration
+  looped() {
+    if (_clock.elapsed >= track!.duration) _clock.seek(Duration.zero);
+    return _clock.elapsed;
   }
 
   @override
@@ -99,5 +43,57 @@ class DemoNotificationService implements MusicNotificationService {
     required Function(Track track) onTrackChanged,
     required Function() onStateChanged,
     required Function() onUnsetTrack,
-  }) {}
+  }) {
+    _onStateChangedCallback = onStateChanged;
+  }
+
+  @override
+  Future<void> play() async {
+    _clock.play();
+    _triggerUpdate();
+  }
+
+  @override
+  Future<void> pause() async {
+    _clock.pause();
+    _triggerUpdate();
+  }
+
+  @override
+  Future<void> togglePause() async {
+    _clock.playing ? _clock.play() : _clock.pause();
+    _triggerUpdate();
+  }
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    _clock.seek(position);
+    _triggerUpdate();
+  }
+
+  // --- Stubs for unsupported features in Dummy mode ---
+
+  @override
+  Future<Image?> getImage() async => null;
+
+  @override
+  Future<Duration> getPosition() async => _clock.elapsed;
+
+  @override
+  Future<bool> hasNotificationAccess() async => true;
+
+  @override
+  Future<void> openNotificationAccessSettings() async {
+    // No-op for dummy
+  }
+
+  @override
+  Future<void> update() async {
+    _triggerUpdate();
+  }
+
+  @override
+  void dispose() {
+    _clock.dispose();
+  }
 }

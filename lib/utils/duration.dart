@@ -1,3 +1,5 @@
+const _kDefault = "--:--";
+
 extension DoubleDuration on double? {
   Duration toDuration() {
     if (this == null) return const Duration();
@@ -8,13 +10,17 @@ extension DoubleDuration on double? {
   }
 
   toShortString() {
-    if (this == null) return "--:--";
+    if (this == null) return _kDefault;
     final totalSeconds = this!;
     final seconds = totalSeconds.truncate();
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+    return intDisplay(seconds);
   }
+}
+
+intDisplay(int seconds) {
+  final minutes = seconds ~/ 60;
+  final remainingSeconds = seconds % 60;
+  return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
 }
 
 extension DynamicDuration on int? {
@@ -30,5 +36,6 @@ extension DurationDouble on Duration? {
         duration.inMilliseconds.remainder(1000) / 1000.0;
   }
 
-  String toShortString() => toString().split('.').first;
+  String toShortString() =>
+      this == null ? _kDefault : intDisplay(this!.inSeconds);
 }

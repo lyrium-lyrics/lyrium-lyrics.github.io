@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:lyrium/storage/local.dart';
 import 'package:lyrium/models.dart';
+import 'package:lyrium/utils/duration.dart';
 import 'package:lyrium/utils/search_terms.dart';
 
 class DataHelper {
@@ -33,7 +34,7 @@ class DataHelper {
             title: data.track.trackName,
             artist: Value(data.track.artistName),
             album: Value(data.track.albumName),
-            duration: data.track.duration,
+            duration: data.track.duration.toDouble(),
             instrumental: Value(data.instrumental == true),
             lyrics: Value(data.syncedLyrics ?? data.plainLyrics ?? ''),
           ),
@@ -56,7 +57,7 @@ class DataHelper {
             title: extra.trackName,
             artist: Value(extra.artistName),
             album: Value(extra.albumName),
-            duration: extra.duration,
+            duration: extra.duration.toDouble(),
             interlinked: Value(refid),
           ),
         );
@@ -108,7 +109,7 @@ class DataHelper {
         title: Value(track.trackName),
         artist: Value(track.albumName),
         album: Value(track.albumName),
-        duration: Value(track.duration),
+        duration: Value(track.duration.toDouble()),
         instrumental: Value(data.instrumental ?? false),
         lyrics: Value(data.syncedLyrics ?? data.plainLyrics ?? ''),
       ),
@@ -159,5 +160,22 @@ class DataHelper {
       }
     }
     return null;
+  }
+
+  Future<int> insert(LyricsTrack track) async {
+    final contains = await db.all().then((e) {
+      for (var i = 0; i < e.length; i++) {
+        final item = e[i];
+        if (item.id == track.id && item.title == track.track.trackName) {
+          return false;
+        }
+      }
+    });
+
+    if (contains ?? false) {
+      return saveTrack(track, null);
+    } else {
+      throw Exception("${track.track.trackName} already exists");
+    }
   }
 }

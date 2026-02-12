@@ -1,11 +1,12 @@
 import 'package:lyrium/storage/local.dart';
+import 'package:lyrium/utils/duration.dart';
 
 class Track {
   final String namespace;
   final String artistName;
   final String trackName;
   final String albumName;
-  final double duration; // ss.mss
+  final Duration duration; // ss.mss
 
   Track({
     required this.namespace,
@@ -21,7 +22,7 @@ class Track {
       trackName: map['trackName'] ?? "",
       artistName: map['artistName'] ?? "",
       albumName: map['albumName'] ?? "",
-      duration: map['duration'] ?? 0.0,
+      duration: ((map['duration'] ?? 0.0) as double).toDuration(),
     );
   }
 
@@ -30,7 +31,7 @@ class Track {
       trackName: lyric.title,
       artistName: lyric.artist ?? "Unknown",
       albumName: lyric.album ?? "Unknown",
-      duration: lyric.duration,
+      duration: lyric.duration.toDuration(),
       namespace: lyric.namespace,
     );
   }
@@ -40,7 +41,7 @@ class Track {
     String? trackName,
     String? artistName,
     String? albumName,
-    double? duration,
+    Duration? duration,
   }) {
     return Track(
       namespace: namespace ?? this.namespace,
@@ -87,7 +88,7 @@ class LyricsTrack {
       'trackName': info?.trackName ?? track.trackName,
       'artistName': info?.artistName ?? track.artistName,
       'albumName': info?.albumName ?? track.albumName,
-      'duration': info?.duration ?? track.duration,
+      'duration': (info?.duration ?? track.duration).toDouble(),
       'instrumental': instrumental == true ? 1 : 0,
       'plainLyrics': plainLyrics,
       'syncedLyrics': syncedLyrics,
@@ -130,7 +131,7 @@ class LyricsTrack {
         trackName: trackName,
         artistName: artistName,
         albumName: albumName,
-        duration: duration,
+        duration: duration.toDuration(),
       ),
 
       instrumental: instrumental ?? this.instrumental,

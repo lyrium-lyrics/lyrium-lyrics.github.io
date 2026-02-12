@@ -1,7 +1,5 @@
-import 'dart:async';
-
 class ClockManager {
-  Timer? _timer;
+  bool _playing = false;
 
   final Function(Duration elapsed)? onUpdate;
   DateTime? _startTime;
@@ -17,17 +15,16 @@ class ClockManager {
   }
 
   void play({Duration? startfrom}) {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      onUpdate?.call(elapsed);
-    });
-
+    _playing = true;
     _startTime = DateTime.now().subtract(startfrom ?? _lastElapsed);
 
     _lastElapsed = Duration.zero;
+    onUpdate?.call(_lastElapsed);
   }
 
   void pause() {
-    _timer?.cancel();
+    _playing = false;
+    // _timer?.cancel();
     if (_startTime != null) {
       _lastElapsed = DateTime.now().difference(_startTime!);
       _startTime = null;
@@ -40,5 +37,9 @@ class ClockManager {
       ? _lastElapsed
       : DateTime.now().difference(_startTime!);
 
-  bool get paused => _timer == null ? true : !_timer!.isActive;
+  bool get playing => _playing;
+
+  void dispose() {
+    _playing = false;
+  }
 }
