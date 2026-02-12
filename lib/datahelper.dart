@@ -161,4 +161,21 @@ class DataHelper {
     }
     return null;
   }
+
+  Future<int> insert(LyricsTrack track) async {
+    final contains = await db.all().then((e) {
+      for (var i = 0; i < e.length; i++) {
+        final item = e[i];
+        if (item.id == track.id && item.title == track.track.trackName) {
+          return false;
+        }
+      }
+    });
+
+    if (contains ?? false) {
+      return saveTrack(track, null);
+    } else {
+      throw Exception("${track.track.trackName} already exists");
+    }
+  }
 }

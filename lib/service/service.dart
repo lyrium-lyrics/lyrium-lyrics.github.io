@@ -18,7 +18,7 @@ LazyDatabase openConnection(String name, {bool? memoryMode}) {
 abstract class MusicService {
   Track? track;
   Duration? duration;
-  Duration? progress;
+  Duration? elapsed;
   bool isPlaying = false;
 
   /// Starts listening to state changes.

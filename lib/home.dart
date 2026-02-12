@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
 
         final track = app.lyrics;
         final isPlaying = app.selectedService.isPlaying;
-        final atPosition = app.selectedService.progress;
+        final atPosition = app.selectedService.elapsed;
 
         final textColor =
             Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;

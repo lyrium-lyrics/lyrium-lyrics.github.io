@@ -4,7 +4,7 @@ description: "Opensource lyrics viewer for web & android."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.4.0+3
+version: 2.4.1+1
 
 environment:
   sdk: ^3.10.0
@@ -31,7 +31,7 @@ dependencies:
   diff_match_patch: ^0.4.1
   pretty_diff_text: ^2.1.0
   package_info_plus: ^9.0.0
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

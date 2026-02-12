@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lyrium/controller.dart';
+import 'package:lyrium/datahelper.dart';
+import 'package:lyrium/models.dart';
 import 'package:lyrium/service/service.dart';
 import 'package:lyrium/widgets/settings.dart';
 import 'package:provider/provider.dart';
-// import 'package:url_launcher/url_launcher.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -22,11 +25,17 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.play_arrow),
             title: Text("Now Playing"),
           ),
-          // ListTile(
-          //   onTap: () => shareDB(),
-          //   leading: Icon(Icons.import_export),
-          //   title: Text("Export"),
-          // ),
+          ListTile(
+            onTap: () => shareDB(context),
+            leading: Icon(Icons.copy),
+            title: Text("Export"),
+          ),
+          ListTile(
+            onTap: () => importDB(context),
+            leading: Icon(Icons.paste),
+            title: Text("Import"),
+          ),
+
           ListTile(
             onTap: () => showAboutDialog(
               context: context,
@@ -65,11 +74,70 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  void shareDB() {
-    // SharePlus.instance.share(ShareParams(files: [
-    //   D
-    //   XFile(path)
-    // ]));
+  void shareDB(context) {
+    DataHelper.instance
+        .searchTracks("")
+        .then((e) {
+          final exportable = e.map((e) => e.toMap()).toList();
+
+          final value = jsonEncode(exportable);
+
+          Clipboard.setData(ClipboardData(text: value));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("${exportable.length} Items Exported to Clipboard"),
+            ),
+          );
+        })
+        .catchError((e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to Export $e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        });
+  }
+
+  Future<void> importDB(context) async {
+    int importcount = 0;
+    Clipboard.getData("text/plain").then((d) {
+      try {
+        final decoded = jsonDecode(d!.text!);
+
+        decoded.map((e) {
+          try {
+            final track = LyricsTrack.fromMap("imported", e);
+
+            DataHelper.instance.insert(track);
+
+            importcount++;
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Failed to Read $e"),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }).toList();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to Import $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        ScaffoldMessenger.of(context).showSnackBar(
+          (SnackBar(
+            content: importcount != 0
+                ? Text("$importcount Items Imported")
+                : Text("Nothing Imported"),
+          )),
+        );
+      }
+    });
   }
 }
 

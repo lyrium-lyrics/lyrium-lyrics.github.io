@@ -139,7 +139,7 @@ class _LyricsViewState extends State<LyricsView> {
 
   SizedBox buildControls(BuildContext context) {
     return SizedBox(
-      height: 120, // Increased height
+      height: 120,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -154,8 +154,7 @@ class _LyricsViewState extends State<LyricsView> {
                 child: Slider(value: position, onChanged: onSeeked),
               ),
               Text(
-                widget.controller.lyrics.track.duration.toShortString() ??
-                    "-----",
+                widget.controller.lyrics.track.duration.toShortString(),
                 style: const TextStyle(fontSize: 12),
               ),
 
@@ -191,10 +190,6 @@ class _LyricsViewState extends State<LyricsView> {
                   widget.controller.isPlaying ? Icons.pause : Icons.play_arrow,
                 ),
                 onPressed: () {
-                  // watchManager.paused
-                  //     ? watchManager.play()
-                  //     : watchManager.pause();
-
                   widget.controller.togglePause(false);
                 },
               ),

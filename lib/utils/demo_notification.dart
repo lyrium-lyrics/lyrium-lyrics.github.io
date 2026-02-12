@@ -21,7 +21,6 @@ class DemoNotificationService extends MusicService {
   }
 
   void _triggerUpdate() {
-    if (_clock.elapsed >= track!.duration) _clock.seek(Duration.zero);
     _onStateChangedCallback?.call();
   }
 
@@ -29,10 +28,15 @@ class DemoNotificationService extends MusicService {
   Duration get duration => track?.duration ?? Duration.zero;
 
   @override
-  bool get isPlaying => !_clock.paused;
+  bool get isPlaying => !_clock.playing;
 
   @override
-  Duration? get progress => _clock.elapsed;
+  Duration? get elapsed => looped();
+
+  looped() {
+    if (_clock.elapsed >= track!.duration) _clock.seek(Duration.zero);
+    return _clock.elapsed;
+  }
 
   @override
   void start({
@@ -57,7 +61,7 @@ class DemoNotificationService extends MusicService {
 
   @override
   Future<void> togglePause() async {
-    _clock.paused ? _clock.play() : _clock.pause();
+    _clock.playing ? _clock.play() : _clock.pause();
     _triggerUpdate();
   }
 

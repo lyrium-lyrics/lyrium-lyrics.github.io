@@ -22,7 +22,7 @@ class Track {
       trackName: map['trackName'] ?? "",
       artistName: map['artistName'] ?? "",
       albumName: map['albumName'] ?? "",
-      duration: map['duration'] ?? 0.0,
+      duration: ((map['duration'] ?? 0.0) as double).toDuration(),
     );
   }
 
@@ -88,7 +88,7 @@ class LyricsTrack {
       'trackName': info?.trackName ?? track.trackName,
       'artistName': info?.artistName ?? track.artistName,
       'albumName': info?.albumName ?? track.albumName,
-      'duration': info?.duration ?? track.duration,
+      'duration': (info?.duration ?? track.duration).toDouble(),
       'instrumental': instrumental == true ? 1 : 0,
       'plainLyrics': plainLyrics,
       'syncedLyrics': syncedLyrics,

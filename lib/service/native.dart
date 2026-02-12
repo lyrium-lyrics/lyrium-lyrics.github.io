@@ -38,7 +38,7 @@ class SupportedConnection extends MusicService {
   @override
   Duration? duration;
   @override
-  Duration? progress;
+  Duration? elapsed;
   @override
   bool isPlaying = false;
   @override
@@ -82,7 +82,7 @@ class SupportedConnection extends MusicService {
 
   Track _parseData(Map<dynamic, dynamic> data) {
     duration = Duration(milliseconds: (data["duration"] as int?) ?? 0);
-    progress = Duration(milliseconds: (data["position"] as int?) ?? 0);
+    elapsed = Duration(milliseconds: (data["position"] as int?) ?? 0);
     isPlaying = data[_kIsPlaying] as bool? ?? false;
 
     return Track(
